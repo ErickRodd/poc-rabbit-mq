@@ -1,0 +1,4 @@
+CREATE TABLE mensagens (
+    id BIGINT IDENTITY(1, 1) PRIMARY KEY,
+    xml VARBINARY(MAX)
+);
