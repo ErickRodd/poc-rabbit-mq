@@ -12,6 +12,9 @@ public class Input {
     @Column(name = "xml")
     private byte[] xml;
 
+    public Input() {
+    }
+
     public Input(Long id, byte[] xml) {
         this.id = id;
         this.xml = xml;

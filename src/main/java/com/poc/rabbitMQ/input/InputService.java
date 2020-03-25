@@ -14,6 +14,11 @@ import java.util.concurrent.TimeoutException;
 
 @Service
 public class InputService {
+    private final InputRepository inputRepository;
+
+    public InputService(InputRepository inputRepository) {
+        this.inputRepository = inputRepository;
+    }
 
     private void validate(MultipartFile file){
         if(file.isEmpty()){
@@ -25,7 +30,7 @@ public class InputService {
         }
     }
 
-    public void publishInRabbit(MultipartFile file){
+    void publishInRabbit(MultipartFile file){
         ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setHost("localhost");
 
@@ -34,13 +39,20 @@ public class InputService {
         try(Connection connection = connectionFactory.newConnection(); Channel channel = connection.createChannel()){
             byte[] xml = file.getBytes();
 
-            channel.exchangeDeclare("logs", "fanout");
-            channel.basicPublish("logs", file.getOriginalFilename(), null, xml);
+            channel.exchangeDeclare("queueA", "fanout");
+            channel.basicPublish("queueA", file.getOriginalFilename(), null, xml);
 
-            System.out.println(String.format("[✓] Input Service: publicado '%s'.", file.getOriginalFilename()));
+            System.out.println(String.format("[✓][Input Service]: publicado '%s'.", file.getOriginalFilename()));
         } catch(IOException | TimeoutException e){
 
-            System.out.println(String.format("[×] Input Service: erro ao publicar no Rabbit → '%s'.", e.getMessage()));
+            System.out.println(String.format("[×][Input Service]: erro ao publicar no Rabbit → '%s'.", e.getMessage()));
         }
+    }
+
+    public Input save(byte[] xml){
+        Input input = new Input();
+        input.setXml(xml);
+
+        return inputRepository.save(input);
     }
 }
