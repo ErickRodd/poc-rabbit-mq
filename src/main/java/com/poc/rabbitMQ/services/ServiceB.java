@@ -21,6 +21,8 @@ public class ServiceB {
 
     @Bean
     private void saveMsgInput() {
+        System.out.println("[•][Service B]: Esperando por novas mensagens...");
+
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
 

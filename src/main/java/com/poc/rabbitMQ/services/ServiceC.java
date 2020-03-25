@@ -19,6 +19,8 @@ public class ServiceC {
 
     @Bean
     private void saveMsgQueueB() {
+        System.out.println("[•][Service C]: Esperando por novas mensagens...");
+
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
 

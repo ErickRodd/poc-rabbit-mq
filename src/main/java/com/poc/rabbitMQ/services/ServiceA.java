@@ -17,6 +17,8 @@ public class ServiceA {
 
     @Bean
     private void consumeInputMessage() {
+        System.out.println("[•][Service A]: Esperando por novas mensagens...");
+
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
 
