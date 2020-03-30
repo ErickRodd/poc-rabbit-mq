@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.concurrent.TimeoutException;
 
 @Service
@@ -22,7 +23,7 @@ public class ServiceC {
 
     @Bean
     private void saveMsgInput() {
-        System.out.println("[•][Service C]: Esperando por novas mensagens...");
+        System.out.println(String.format("[%s][♦][Service C]: Esperando por novas mensagens...", LocalTime.now()));
 
         ConnectionFactory factory = ConnectionFactoryUtil.newFactory();
 
@@ -37,14 +38,13 @@ public class ServiceC {
             DeliverCallback callback = (consumerTag, delivery) -> {
                 inputService.save(delivery.getBody());
 
-                System.out.println("[✓][Service C]: XML consumido e salvo no banco.");
+                System.out.println(String.format("[%s][✔][Service C]: XML consumido e salvo no banco.", LocalTime.now()));
             };
 
-            channel.basicConsume("queueC", true, callback, consumerTag -> {
-            });
+            channel.basicConsume("queueC", true, callback, consumerTag -> {});
 
         } catch (IOException | TimeoutException e) {
-            System.out.println(String.format("[×][Service C]: erro ao consumir XML → '%s'.", e.getMessage()));
+            System.out.println(String.format("[%s][✘][Service C]: erro ao consumir XML → '%s'.", LocalTime.now(), e.getMessage()));
         }
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 
@@ -21,36 +22,36 @@ public class InputService {
         this.inputRepository = inputRepository;
     }
 
-    private void validate(MultipartFile file){
-        if(file.isEmpty()){
+    private void validate(MultipartFile file) {
+        if (file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Um arquivo deve ser informado.");
         }
 
-        if(!Objects.equals(file.getContentType(), "application/xml")){
+        if (!Objects.equals(file.getContentType(), "application/xml")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O arquivo informado deve ser um XML.");
         }
     }
 
-    void publishInRabbit(MultipartFile file){
+    void publishInRabbit(MultipartFile file) {
         ConnectionFactory connectionFactory = ConnectionFactoryUtil.newFactory();
 
         validate(file);
 
-        try(Connection connection = connectionFactory.newConnection(); Channel channel = connection.createChannel()){
+        try (Connection connection = connectionFactory.newConnection(); Channel channel = connection.createChannel()) {
             byte[] xml = file.getBytes();
 
             channel.exchangeDeclare("queueA", "fanout");
             channel.queueDeclare("queueA", false, false, false, null);
             channel.basicPublish("queueA", "", null, xml);
 
-            System.out.println(String.format("[✓][Input Service]: publicado '%s'.", file.getOriginalFilename()));
-        } catch(IOException | TimeoutException e){
+            System.out.println(String.format("[%s][✔][Input Service]: publicado '%s'.", LocalTime.now(), file.getOriginalFilename()));
+        } catch (IOException | TimeoutException e) {
 
-            System.out.println(String.format("[×][Input Service]: erro ao publicar no Rabbit → '%s'.", e.getMessage()));
+            System.out.println(String.format("[%s][✘][Input Service]: erro ao publicar no Rabbit → '%s'.", LocalTime.now(), e.getMessage()));
         }
     }
 
-    public void save(byte[] xml){
+    public void save(byte[] xml) {
         Input input = new Input();
         input.setXml(xml);
 
