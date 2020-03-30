@@ -1,5 +1,7 @@
 package com.poc.rabbitMQ.services;
 
+import com.poc.rabbitMQ.input.InputService;
+import com.poc.rabbitMQ.utils.ConnectionFactoryUtil;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -7,40 +9,38 @@ import com.rabbitmq.client.DeliverCallback;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.time.LocalDate;
 import java.util.concurrent.TimeoutException;
 
 @Service
 public class ServiceC {
+    private final InputService inputService;
+
+    public ServiceC(InputService inputService) {
+        this.inputService = inputService;
+    }
 
     @Bean
-    private void saveMsgQueueB() {
+    private void saveMsgInput() {
         System.out.println("[•][Service C]: Esperando por novas mensagens...");
 
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+        ConnectionFactory factory = ConnectionFactoryUtil.newFactory();
 
         try {
             Connection connection = factory.newConnection();
             Channel channel = connection.createChannel();
 
-            channel.exchangeDeclare("queueB", "fanout");
-            String queueName = channel.queueDeclare().getQueue();
-            channel.queueBind(queueName, "queueB", "");
+            channel.exchangeDeclare("queueC", "fanout");
+            channel.queueDeclare("queueC", false, false, false, null);
+            channel.queueBind("queueC", "queueC", "");
 
             DeliverCallback callback = (consumerTag, delivery) -> {
-                System.out.println("[✓][Service C]: XML modificado consumido e salvo no disco.");
+                inputService.save(delivery.getBody());
 
-                OutputStream outputStream = new FileOutputStream(new File(System.getProperty("user.home") + String.format("/Desktop/xmlMod-%s.xml", LocalDate.now())));
-                outputStream.write(delivery.getBody());
-                outputStream.close();
+                System.out.println("[✓][Service C]: XML consumido e salvo no banco.");
             };
 
-            channel.basicConsume(queueName, true, callback, consumerTag -> {
+            channel.basicConsume("queueC", true, callback, consumerTag -> {
             });
 
         } catch (IOException | TimeoutException e) {

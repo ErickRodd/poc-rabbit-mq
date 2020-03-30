@@ -1,5 +1,6 @@
 package com.poc.rabbitMQ.input;
 
+import com.poc.rabbitMQ.utils.ConnectionFactoryUtil;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -31,8 +32,7 @@ public class InputService {
     }
 
     void publishInRabbit(MultipartFile file){
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setHost("localhost");
+        ConnectionFactory connectionFactory = ConnectionFactoryUtil.newFactory();
 
         validate(file);
 
@@ -40,7 +40,8 @@ public class InputService {
             byte[] xml = file.getBytes();
 
             channel.exchangeDeclare("queueA", "fanout");
-            channel.basicPublish("queueA", file.getOriginalFilename(), null, xml);
+            channel.queueDeclare("queueA", false, false, false, null);
+            channel.basicPublish("queueA", "", null, xml);
 
             System.out.println(String.format("[✓][Input Service]: publicado '%s'.", file.getOriginalFilename()));
         } catch(IOException | TimeoutException e){
@@ -49,10 +50,10 @@ public class InputService {
         }
     }
 
-    public Input save(byte[] xml){
+    public void save(byte[] xml){
         Input input = new Input();
         input.setXml(xml);
 
-        return inputRepository.save(input);
+        inputRepository.save(input);
     }
 }

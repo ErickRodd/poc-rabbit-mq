@@ -1,5 +1,6 @@
 package com.poc.rabbitMQ.services;
 
+import com.poc.rabbitMQ.utils.ConnectionFactoryUtil;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -19,25 +20,24 @@ public class ServiceA {
     private void consumeInputMessage() {
         System.out.println("[•][Service A]: Esperando por novas mensagens...");
 
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+        ConnectionFactory factory = ConnectionFactoryUtil.newFactory();
 
         try {
             Connection connection = factory.newConnection();
             Channel channel = connection.createChannel();
 
             channel.exchangeDeclare("queueA", "fanout");
-            String queueName = channel.queueDeclare().getQueue();
-            channel.queueBind(queueName, "queueA", "");
+            channel.queueDeclare("queueA", false, false, false, null);
+            channel.queueBind("queueA", "queueA", "");
 
             DeliverCallback callback = (consumerTag, delivery) -> {
-                String msg = delivery.getEnvelope().getRoutingKey();
-                System.out.println(String.format("[✓][Service A]: consumido '%s'.", msg));
+                System.out.println("[✓][Service A]: XML consumido.");
 
                 publishToServiceB(delivery.getBody());
+                publishToServiceC(delivery.getBody());
             };
 
-            channel.basicConsume(queueName, true, callback, consumerTag -> {
+            channel.basicConsume("queueA", true, callback, consumerTag -> {
             });
 
         } catch (IOException | TimeoutException e) {
@@ -46,8 +46,7 @@ public class ServiceA {
     }
 
     private void publishToServiceB(byte[] xml) {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
+        ConnectionFactory factory = ConnectionFactoryUtil.newFactory();
 
         String xmlString = new String(xml, StandardCharsets.UTF_8);
 
@@ -55,11 +54,26 @@ public class ServiceA {
             xmlString = StringUtils.replace(xmlString, "</idade>", "</idade>\n<nacionalidade>Brasileiro</nacionalidade>");
 
             channel.exchangeDeclare("queueB", "fanout");
+            channel.queueDeclare("queueB", false, false, false, null);
             channel.basicPublish("queueB", "", null, xmlString.getBytes());
 
             System.out.println("[✓][Service A]: publicado XML modificado para a fila B.");
         } catch (IOException | TimeoutException e) {
             System.out.println(String.format("[×][Service A]: erro ao publicar XML modificado → '%s'.", e.getMessage()));
+        }
+    }
+
+    private void publishToServiceC(byte[] xml) {
+        ConnectionFactory factory = ConnectionFactoryUtil.newFactory();
+
+        try(Connection connection = factory.newConnection(); Channel channel = connection.createChannel()){
+            channel.exchangeDeclare("queueC", "fanout");
+            channel.queueDeclare("queueC", false, false, false, null);
+            channel.basicPublish("queueC", "", null, xml);
+
+            System.out.println("[✓][Service A]: publicado XML para a fila C.");
+        } catch (IOException | TimeoutException e){
+            System.out.println(String.format("[×][Service A]: erro ao publicar XML para a fila C → '%s'.", e.getMessage()));
         }
     }
 }
