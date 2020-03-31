@@ -18,7 +18,7 @@ public class InputRest {
     }
 
     @PostMapping
-    public void saveMessage(@RequestParam("file") MultipartFile file) {
+    private void saveMessage(@RequestParam("file") MultipartFile file) {
         inputService.publishInRabbit(file);
     }
 }
