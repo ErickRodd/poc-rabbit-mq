@@ -1,9 +1,6 @@
 package com.poc.rabbitMQ.input;
 
-import com.poc.rabbitMQ.utils.ConnectionFactoryUtil;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.poc.rabbitMQ.utils.MessageUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,20 +30,13 @@ public class InputService {
     }
 
     void publishInRabbit(MultipartFile file) {
-        ConnectionFactory connectionFactory = ConnectionFactoryUtil.newFactory();
-
         validate(file);
 
-        try (Connection connection = connectionFactory.newConnection(); Channel channel = connection.createChannel()) {
-            byte[] xml = file.getBytes();
-
-            channel.exchangeDeclare("queueA", "fanout");
-            channel.queueDeclare("queueA", false, false, false, null);
-            channel.basicPublish("queueA", "", null, xml);
+        try {
+            MessageUtil.publish("queueA", "fanout", "queueA", file.getBytes());
 
             System.out.println(String.format("[%s][✔][Input Service]: publicado '%s'.", LocalTime.now(), file.getOriginalFilename()));
         } catch (IOException | TimeoutException e) {
-
             System.out.println(String.format("[%s][✘][Input Service]: erro ao publicar no Rabbit → '%s'.", LocalTime.now(), e.getMessage()));
         }
     }

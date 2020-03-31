@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-public class RetryPublishUtil {
+public class RetryMessageUtil {
 
     public static void retryProducer(String exchangeName, String queueName, int delayTime, byte[] message) {
         try {
