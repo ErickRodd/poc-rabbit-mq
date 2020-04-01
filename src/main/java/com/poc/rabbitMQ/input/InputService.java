@@ -1,6 +1,10 @@
 package com.poc.rabbitMQ.input;
 
 import com.poc.rabbitMQ.utils.MessageUtil;
+import com.poc.rabbitMQ.utils.RetryMessageUtil;
+import com.poc.rabbitMQ.utils.ThrowExceptionUtil;
+import com.rabbitmq.client.DeliverCallback;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,7 +23,7 @@ public class InputService {
         this.inputRepository = inputRepository;
     }
 
-    private void validate(MultipartFile file) {
+    void validate(MultipartFile file) {
         if (file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Um arquivo deve ser informado.");
         }
@@ -29,16 +33,29 @@ public class InputService {
         }
     }
 
-    void publishInRabbit(MultipartFile file) {
-        validate(file);
-
+    void publishInRabbit(byte[] file) {
         try {
-            MessageUtil.publish("queueA", "fanout", "queueA", file.getBytes());
+            ThrowExceptionUtil.randomIOException();
 
-            System.out.println(String.format("[%s][✔][Input Service]: publicado '%s'.", LocalTime.now(), file.getOriginalFilename()));
+            MessageUtil.publish("queueA", "fanout", "queueA", file);
+
+            System.out.println(String.format("[%s][✔][Input Service]: publicado arquivo para a fila A.", LocalTime.now()));
         } catch (IOException | TimeoutException e) {
             System.out.println(String.format("[%s][✘][Input Service]: erro ao publicar no Rabbit → '%s'.", LocalTime.now(), e.getMessage()));
+
+            RetryMessageUtil.retryProducer("queueA_delayed", "queueA_delayed", 30000, file);
+
+            System.out.println(String.format("[%s][✘][Input Service]: tentando novamente em 30 segundos.", LocalTime.now()));
         }
+    }
+
+    @Bean
+    private void retryPublishInRabbit(){
+        DeliverCallback callback = (consumerTag, delivery) -> {
+            publishInRabbit(delivery.getBody());
+        };
+
+        RetryMessageUtil.retryConsumer("queueA_delayed", callback);
     }
 
     public void save(byte[] xml) {
