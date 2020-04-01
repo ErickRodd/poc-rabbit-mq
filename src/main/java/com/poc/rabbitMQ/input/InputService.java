@@ -33,15 +33,15 @@ public class InputService {
         }
     }
 
-    void publishInRabbit(byte[] file) {
+    void publishToServiceA(byte[] file) {
         try {
             ThrowExceptionUtil.randomIOException();
 
             MessageUtil.publish("queueA", "fanout", "queueA", file);
 
-            System.out.println(String.format("[%s][✔][Input Service]: publicado arquivo para a fila A.", LocalTime.now()));
+            System.out.println(String.format("[%s][✔][Input Service]: publicado mensagem com o arquivo para a fila da service A.", LocalTime.now()));
         } catch (IOException | TimeoutException e) {
-            System.out.println(String.format("[%s][✘][Input Service]: erro ao publicar no Rabbit → '%s'.", LocalTime.now(), e.getMessage()));
+            System.out.println(String.format("[%s][✘][Input Service]: erro ao publicar para a fila da service A → '%s'.", LocalTime.now(), e.getCause()));
 
             RetryMessageUtil.retryProducer("queueA_delayed", "queueA_delayed", 30000, file);
 
@@ -50,9 +50,9 @@ public class InputService {
     }
 
     @Bean
-    private void retryPublishInRabbit(){
+    private void retryPublishToServiceA(){
         DeliverCallback callback = (consumerTag, delivery) -> {
-            publishInRabbit(delivery.getBody());
+            publishToServiceA(delivery.getBody());
         };
 
         RetryMessageUtil.retryConsumer("queueA_delayed", callback);

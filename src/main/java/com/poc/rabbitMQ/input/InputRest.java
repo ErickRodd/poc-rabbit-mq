@@ -22,6 +22,6 @@ public class InputRest {
     @PostMapping
     private void saveMessage(@RequestParam("file") MultipartFile file) throws IOException {
         inputService.validate(file);
-        inputService.publishInRabbit(file.getBytes());
+        inputService.publishToServiceA(file.getBytes());
     }
 }

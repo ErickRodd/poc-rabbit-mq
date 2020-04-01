@@ -15,11 +15,11 @@ import java.util.concurrent.TimeoutException;
 public class ServiceA {
 
     @Bean
-    private void consumeInputMessage() {
+    private void consumeQueueAMessage() {
         System.out.println(String.format("[%s][♦][Service A]: Esperando por novas mensagens...", LocalTime.now()));
 
         DeliverCallback callback = (consumerTag, delivery) -> {
-            System.out.println(String.format("[%s][✔][Service A]: XML consumido.", LocalTime.now()));
+            System.out.println(String.format("[%s][✔][Service A]: mensagem recebida consumida.", LocalTime.now()));
 
             publishToServiceB(delivery.getBody());
             publishToServiceC(delivery.getBody());
@@ -28,7 +28,7 @@ public class ServiceA {
         try {
             MessageUtil.consume("queueA", "fanout", "queueA", callback);
         } catch (IOException | TimeoutException e) {
-            System.out.println(String.format("[%s][✘][Service A]: erro ao consumir XML → '%s'.", LocalTime.now(), e.getMessage()));
+            System.out.println(String.format("[%s][✘][Service A]: erro ao consumir mensagem recebida → '%s'.", LocalTime.now(), e.getCause()));
         }
     }
 
@@ -38,9 +38,9 @@ public class ServiceA {
 
             MessageUtil.publish("queueB", "fanout", "queueB", xml);
 
-            System.out.println(String.format("[%s][✔][Service A]: publicado XML modificado para a fila B.", LocalTime.now()));
+            System.out.println(String.format("[%s][✔][Service A]: publicado mensagem modificada para a fila da service B.", LocalTime.now()));
         } catch (IOException | TimeoutException e) {
-            System.out.println(String.format("[%s][✘][Service A]: erro ao publicar XML modificado para a fila B → '%s'.", LocalTime.now(), e.getMessage()));
+            System.out.println(String.format("[%s][✘][Service A]: erro ao publicar mensagem modificada para a fila da service B → '%s'.", LocalTime.now(), e.getCause()));
 
             RetryMessageUtil.retryProducer("queueB_delayed", "queueB_delayed", 30000, xml);
 
@@ -63,9 +63,9 @@ public class ServiceA {
 
             MessageUtil.publish("queueC", "fanout", "queueC", xml);
 
-            System.out.println(String.format("[%s][✔][Service A]: publicado XML para a fila C.", LocalTime.now()));
+            System.out.println(String.format("[%s][✔][Service A]: publicado mensagem para a fila da service C.", LocalTime.now()));
         } catch (IOException | TimeoutException e) {
-            System.out.println(String.format("[%s][✘][Service A]: erro ao publicar mensagem para a fila C → '%s'.", LocalTime.now(), e.getMessage()));
+            System.out.println(String.format("[%s][✘][Service A]: erro ao publicar mensagem para a fila da service C → '%s'.", LocalTime.now(), e.getCause()));
             System.out.println(String.format("[%s][✘][Service A]: tentando novamente em 30 segundos.", LocalTime.now()));
 
             RetryMessageUtil.retryProducer("queueC_delayed", "queueC_delayed", 30000, xml);

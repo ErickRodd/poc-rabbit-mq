@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 public class ServiceB {
 
     @Bean
-    private void saveMsgQueueB() {
+    private void consumeQueueBMessage() {
         System.out.println(String.format("[%s][♦][Service B]: Esperando por novas mensagens...", LocalTime.now()));
 
         DeliverCallback callback = (consumerTag, delivery) -> {
@@ -31,13 +31,13 @@ public class ServiceB {
             outputStream.write(xmlString.getBytes());
             outputStream.close();
 
-            System.out.println(String.format("[%s][✔][Service B]: XML modificado consumido e salvo no disco.", LocalTime.now()));
+            System.out.println(String.format("[%s][✔][Service B]: mensagem recebida consumida e salva no disco.", LocalTime.now()));
         };
 
         try {
             MessageUtil.consume("queueB", "fanout", "queueB", callback);
         } catch (IOException | TimeoutException e) {
-            System.out.println(String.format("[%s][✘][Service B]: erro ao consumir XML → '%s'.", LocalTime.now(), e.getMessage()));
+            System.out.println(String.format("[%s][✘][Service B]: erro ao consumir mensagem recebida → '%s'.", LocalTime.now(), e.getCause()));
         }
     }
 }

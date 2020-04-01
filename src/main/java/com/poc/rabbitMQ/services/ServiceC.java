@@ -19,19 +19,19 @@ public class ServiceC {
     }
 
     @Bean
-    private void saveMsgInput() {
+    private void consumeQueueCMessage() {
         System.out.println(String.format("[%s][♦][Service C]: Esperando por novas mensagens...", LocalTime.now()));
 
         DeliverCallback callback = (consumerTag, delivery) -> {
             inputService.save(delivery.getBody());
 
-            System.out.println(String.format("[%s][✔][Service C]: XML consumido e salvo no banco.", LocalTime.now()));
+            System.out.println(String.format("[%s][✔][Service C]: mensagem recebida consumida e salva no banco.", LocalTime.now()));
         };
 
         try {
             MessageUtil.consume("queueC", "fanout", "queueC", callback);
         } catch (IOException | TimeoutException e) {
-            System.out.println(String.format("[%s][✘][Service C]: erro ao consumir XML → '%s'.", LocalTime.now(), e.getMessage()));
+            System.out.println(String.format("[%s][✘][Service C]: erro ao consumir mensagem recebida → '%s'.", LocalTime.now(), e.getCause()));
         }
     }
 }
