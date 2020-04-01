@@ -36,11 +36,11 @@ public class ServiceA {
         try {
             //ThrowExceptionUtil.randomIOException();
 
-            MessageUtil.publish("queueB", "faout", "queueB", xml);
+            MessageUtil.publish("queueB", "fanout", "queueB", xml);
 
             System.out.println(String.format("[%s][✔][Service A]: publicado XML modificado para a fila B.", LocalTime.now()));
         } catch (IOException | TimeoutException e) {
-            System.out.println(String.format("[%s][✘][Service A]: erro ao publicar XML modificado → '%s'.", LocalTime.now(), e.getMessage()));
+            System.out.println(String.format("[%s][✘][Service A]: erro ao publicar XML modificado para a fila B → '%s'.", LocalTime.now(), e.getMessage()));
 
             RetryMessageUtil.retryProducer("queueB_delayed", "queueB_delayed", 30000, xml);
 
