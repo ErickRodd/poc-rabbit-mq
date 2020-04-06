@@ -1,14 +1,15 @@
 version : '3.3'
-
 services:
   sqlserver:
     image: microsoft/mssql-server-linux
     hostname: sqlserver
     environment:
+      - COMPOSE_PROJECT_NAME=poc-rabbit
       - ACCEPT_EULA=Y
       - SA_PASSWORD=pocRabbit123
+    container_name: pocrabbit-sqlserver
     ports:
-      - 1433:1433
+      - 1477:1433
 
   rabbitmq:
     image: coisa2004/rabbitmq-delay
