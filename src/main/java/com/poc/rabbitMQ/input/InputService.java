@@ -35,7 +35,7 @@ public class InputService {
 
     void publishToServiceA(byte[] file) {
         try {
-            ThrowExceptionUtil.randomIOException();
+            //ThrowExceptionUtil.randomIOException();
 
             MessageUtil.publish("queueA", "fanout", "queueA", file);
 
