@@ -1,30 +1,27 @@
 package com.poc.rabbitMQ.input;
 
-import javax.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "mensagens")
+@Document("mensagens")
 public class Input {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "xml")
+    private String id;
     private byte[] xml;
 
     public Input() {
     }
 
-    public Input(Long id, byte[] xml) {
+    public Input(String id, byte[] xml) {
         this.id = id;
         this.xml = xml;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -35,5 +32,4 @@ public class Input {
     public void setXml(byte[] xml) {
         this.xml = xml;
     }
-
 }
